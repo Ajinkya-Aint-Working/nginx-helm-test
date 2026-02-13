@@ -15,20 +15,20 @@ jobs:
           chmod +x argocd
           sudo mv argocd /usr/local/bin/
 
-      - name: Login to ArgoCD
+      - name: Configure ArgoCD Environment
         run: |
-          argocd login $ARGOCD_SERVER \
-            --username admin \
-            --auth-token $ARGOCD_AUTH_TOKEN \
-            --grpc-web
-        env:
-          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
-          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          echo "ARGOCD_SERVER=${{ secrets.ARGOCD_SERVER }}" >> $GITHUB_ENV
+          echo "ARGOCD_AUTH_TOKEN=${{ secrets.ARGOCD_AUTH_TOKEN }}" >> $GITHUB_ENV
+          echo "ARGOCD_OPTS=--grpc-web" >> $GITHUB_ENV
 
       - name: Delete Application
         run: |
-          argocd app delete nginx-test --cascade --yes
+          argocd app delete nginx-test --cascade --yes || true
+
+      - name: Wait Until Deleted
+        run: |
+          argocd app wait nginx-test --delete --timeout 120 || true
 
       - name: Verify Deletion
         run: |
-          argocd app list || true
+          argocd app list
