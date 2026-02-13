@@ -33,9 +33,6 @@ jobs:
             --sync-option CreateNamespace=true \
           || true
 
-      - name: Sync Application
-        run: argocd app sync nginx-test
-
       - name: Wait for Healthy Status
         run: argocd app wait nginx-test --health --timeout 300
 
