@@ -1,0 +1,50 @@
+name: Deploy ArgoCD Application
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install ArgoCD CLI
+        run: |
+          curl -sSL -o argocd \
+            https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x argocd
+          sudo mv argocd /usr/local/bin/
+
+      - name: Login to ArgoCD
+        run: |
+          argocd login $ARGOCD_SERVER \
+            --auth-token $ARGOCD_AUTH_TOKEN \
+            --grpc-web
+        env:
+          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+
+      - name: Create or Update Application
+        run: |
+          argocd app create nginx-test \
+            --repo https://github.com/Ajinkya-Aint-Working/nginx-helm-test.git \
+            --path nginx-test-chart \
+            --revision main \
+            --dest-server https://kubernetes.default.svc \
+            --dest-namespace nginx-test \
+            --sync-policy automated \
+            --sync-option CreateNamespace=true \
+          || true
+
+      - name: Sync Application
+        run: |
+          argocd app sync nginx-test
+
+      - name: Wait for Healthy Status
+        run: |
+          argocd app wait nginx-test --health --timeout 300
+
+      - name: Show Application Status
+        run: |
+          argocd app get nginx-test
