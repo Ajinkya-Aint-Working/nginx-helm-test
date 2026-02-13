@@ -15,15 +15,11 @@ jobs:
           chmod +x argocd
           sudo mv argocd /usr/local/bin/
 
-      - name: Login to ArgoCD
+      - name: Configure ArgoCD Environment
         run: |
-          argocd login $ARGOCD_SERVER \
-            --username admin \
-            --auth-token $ARGOCD_AUTH_TOKEN \
-            --grpc-web
-        env:
-          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
-          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          echo "ARGOCD_SERVER=${{ secrets.ARGOCD_SERVER }}" >> $GITHUB_ENV
+          echo "ARGOCD_AUTH_TOKEN=${{ secrets.ARGOCD_AUTH_TOKEN }}" >> $GITHUB_ENV
+          echo "ARGOCD_OPTS=--grpc-web" >> $GITHUB_ENV
 
       - name: Create or Update Application
         run: |
@@ -38,13 +34,10 @@ jobs:
           || true
 
       - name: Sync Application
-        run: |
-          argocd app sync nginx-test
+        run: argocd app sync nginx-test
 
       - name: Wait for Healthy Status
-        run: |
-          argocd app wait nginx-test --health --timeout 300
+        run: argocd app wait nginx-test --health --timeout 300
 
-      - name: Show Application Status
-        run: |
-          argocd app get nginx-test
+      - name: Show Status
+        run: argocd app get nginx-test
