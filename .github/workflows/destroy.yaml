@@ -18,6 +18,7 @@ jobs:
       - name: Login to ArgoCD
         run: |
           argocd login $ARGOCD_SERVER \
+            --username admin \
             --auth-token $ARGOCD_AUTH_TOKEN \
             --grpc-web
         env:
@@ -26,9 +27,7 @@ jobs:
 
       - name: Delete Application
         run: |
-          argocd app delete nginx-test \
-            --cascade \
-            --yes
+          argocd app delete nginx-test --cascade --yes
 
       - name: Verify Deletion
         run: |
