@@ -24,7 +24,7 @@ jobs:
       - name: Create or Update Application
         run: |
           argocd app create nginx-test \
-            --repo https://github.com/Ajinkya-Aint-Working/nginx-helm-test.git \
+            --repo https://github.com/${{ github.repository }}.git \
             --path nginx-test-chart \
             --revision main \
             --dest-server https://kubernetes.default.svc \
